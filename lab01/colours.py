@@ -3,22 +3,15 @@ from tkinter import ttk, colorchooser
 
 
 def clamp(value, low, high):
-    """Ограничивает значение диапазоном [low, high]."""
     return max(low, min(high, float(value)))
 
 def rgb_to_cmyk(r, g, b):
-    """
-    RGB -> CMYK.
-    r, g, b: 0..255
-    Возвращает c, m, y, k в процентах: 0..100
-    """
     r = clamp(r, 0, 255) / 255.0
     g = clamp(g, 0, 255) / 255.0
     b = clamp(b, 0, 255) / 255.0
 
     k = 1.0 - max(r, g, b)
 
-    # Чёрный цвет
     if k >= 1.0:
         return 0.0, 0.0, 0.0, 100.0
 
@@ -30,11 +23,7 @@ def rgb_to_cmyk(r, g, b):
 
 
 def cmyk_to_rgb(c, m, y, k):
-    """
-    CMYK -> RGB.
-    c, m, y, k: 0..100
-    Возвращает r, g, b: 0..255
-    """
+
     c = clamp(c, 0, 100) / 100.0
     m = clamp(m, 0, 100) / 100.0
     y = clamp(y, 0, 100) / 100.0
@@ -52,14 +41,6 @@ def cmyk_to_rgb(c, m, y, k):
 
 
 def rgb_to_hsv(r, g, b):
-    """
-    RGB -> HSV.
-    r, g, b: 0..255
-    Возвращает:
-        h: 0..360
-        s: 0..100
-        v: 0..100
-    """
     r = clamp(r, 0, 255) / 255.0
     g = clamp(g, 0, 255) / 255.0
     b = clamp(b, 0, 255) / 255.0
@@ -93,13 +74,7 @@ def rgb_to_hsv(r, g, b):
 
 
 def hsv_to_rgb(h, s, v):
-    """
-    HSV -> RGB.
-    h: 0..360
-    s: 0..100
-    v: 0..100
-    Возвращает r, g, b: 0..255
-    """
+
     h = float(h) % 360.0
     s = clamp(s, 0, 100) / 100.0
     v = clamp(v, 0, 100) / 100.0
@@ -126,11 +101,6 @@ def hsv_to_rgb(h, s, v):
     b = int(round((b1 + m) * 255.0))
 
     return r, g, b
-
-
-# ------------------------------------------------------------
-# Графическое приложение
-# ------------------------------------------------------------
 
 class ColorLabApp:
     MODELS = ("CMYK", "RGB", "HSV")
@@ -159,12 +129,10 @@ class ColorLabApp:
     def __init__(self, root):
         self.root = root
 
-        # Текущий цвет храним в RGB
         self.r = 255
         self.g = 0
         self.b = 0
 
-        # Флаг нужен, чтобы не было бесконечных рекурсивных обновлений
         self._updating = False
 
         self.scales = {model: {} for model in self.MODELS}
@@ -172,19 +140,13 @@ class ColorLabApp:
 
         self._build_ui()
 
-        # Начальный цвет: красный
         self.apply_color("RGB", (255, 0, 0))
-
-    # --------------------------------------------------------
-    # Интерфейс
-    # --------------------------------------------------------
 
     def _build_ui(self):
         self.root.title("Лабораторная работа 1: CMYK – RGB – HSV")
         self.root.geometry("1100x460")
         self.root.minsize(980, 400)
 
-        # Верхняя панель с предпросмотром и палитрой
         top = ttk.Frame(self.root)
         top.pack(fill="x", padx=10, pady=10)
 
@@ -219,16 +181,6 @@ class ColorLabApp:
             command=self.choose_color
         ).pack(anchor="w", pady=5)
 
-        ttk.Label(
-            info,
-            text=(
-                "Точные значения можно вводить в поля справа от ползунков.\n"
-                "Изменение подтверждается Enter или потерей фокуса."
-            ),
-            justify="left"
-        ).pack(anchor="w")
-
-        # Три блока моделей
         columns = ttk.Frame(self.root)
         columns.pack(fill="both", expand=True, padx=10, pady=(0, 10))
 
@@ -277,9 +229,6 @@ class ColorLabApp:
         self.scales[model][comp] = scale
         self.entries[model][comp] = entry
 
-    # --------------------------------------------------------
-    # Вспомогательные методы для диапазонов и значений
-    # --------------------------------------------------------
 
     def _range(self, model, comp):
         if model == "RGB":
@@ -308,10 +257,6 @@ class ColorLabApp:
 
         return f"{float(value):.2f}"
 
-    # --------------------------------------------------------
-    # Чтение значений из интерфейса
-    # --------------------------------------------------------
-
     def _read_model_from_scales(self, model):
         values = []
 
@@ -337,10 +282,6 @@ class ColorLabApp:
             values.append(value)
 
         return tuple(values)
-
-    # --------------------------------------------------------
-    # Обработчики событий
-    # --------------------------------------------------------
 
     def _on_scale(self, model, comp):
         if self._updating:
@@ -368,15 +309,7 @@ class ColorLabApp:
             rgb = tuple(int(round(channel)) for channel in rgb)
             self.apply_color("RGB", rgb)
 
-    # --------------------------------------------------------
-    # Главный метод применения цвета
-    # --------------------------------------------------------
-
     def apply_color(self, source_model, values):
-        """
-        source_model: 'CMYK', 'RGB' или 'HSV'
-        values: значения компонент исходной модели
-        """
 
         self._updating = True
 
@@ -417,20 +350,14 @@ class ColorLabApp:
             else:
                 raise ValueError(f"Неизвестная цветовая модель: {source_model}")
 
-            # Обновляем все три модели в интерфейсе
             self._write_model("RGB", rgb_vals)
             self._write_model("CMYK", cmyk_vals)
             self._write_model("HSV", hsv_vals)
 
-            # Обновляем предпросмотр
             self._update_preview()
 
         finally:
             self._updating = False
-
-    # --------------------------------------------------------
-    # Запись значений в интерфейс
-    # --------------------------------------------------------
 
     def _write_model(self, model, values):
         for comp, value in zip(self.COMPONENTS[model], values):
