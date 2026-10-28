@@ -1,11 +1,1 @@
-# Runtime:
-# GUI использует tkinter, который обычно идёт вместе с официальным Python для Windows.
-# Если tkinter отсутствует:
-# - Windows: переустановить Python с компонентой tcl/tk;
-# - Linux: sudo apt install python3-tk
-
-# Сборка .exe
 pyinstaller>=6.6.0
-
-# Понадобится позже для генерации отчёта через python-docx
-python-docx>=1.1.0
